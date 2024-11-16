@@ -1,7 +1,7 @@
 var isExtensionOn = true;
 var refreshIntervalId = null;
 
-const refreshInterval = 7500;
+const refreshInterval = Math.floor(Math.random() * (120000 - 70000 + 1)) + 70000;
 
 // Function to check if URL matches the target page
 function shouldRefresh(url) {
