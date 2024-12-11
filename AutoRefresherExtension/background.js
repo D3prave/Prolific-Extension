@@ -1,7 +1,7 @@
 var isExtensionOn = true;
 var refreshIntervalId = null;
 
-const refreshInterval = Math.floor(Math.random() * (120000 - 70000 + 1)) + 70000;
+const refreshInterval = Math.floor(Math.random() * (115000 - 65000 + 1)) + 65000;
 
 // Function to check if URL matches the target page
 function shouldRefresh(url) {
@@ -12,25 +12,12 @@ function shouldRefresh(url) {
 function startAutoRefresh(tabId) {
   if (refreshIntervalId) clearInterval(refreshIntervalId); // Clear any existing interval
 
-  // Check if the tab's URL still matches the target URL before setting up the interval
-  chrome.tabs.get(tabId, (tab) => {
-    if (shouldRefresh(tab.url)) {
-      refreshIntervalId = setInterval(() => {
-        chrome.scripting.executeScript({
-          target: { tabId: tabId },
-          func: () => location.reload()
-        });
-      }, refreshInterval);
-    }
-  });
-}
-
-// Function to stop auto-refresh
-function stopAutoRefresh() {
-  if (refreshIntervalId) {
-    clearInterval(refreshIntervalId);
-    refreshIntervalId = null;
-  }
+  refreshIntervalId = setInterval(() => {
+    chrome.scripting.executeScript({
+      target: { tabId: tabId },
+      func: () => location.reload()
+    });
+  }, refreshInterval);
 }
 
 // Restart auto-refresh on all relevant tabs when extension is toggled on
@@ -50,8 +37,9 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     isExtensionOn = request.data.value;
 
     // Clear refresh if turning off
-    if (!isExtensionOn) {
-      stopAutoRefresh();
+    if (!isExtensionOn && refreshIntervalId) {
+      clearInterval(refreshIntervalId);
+      refreshIntervalId = null;
     }
 
     // If turning on, re-enable auto-refresh on any relevant tabs
@@ -67,13 +55,9 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   }
 });
 
-// Listen for updates to each tab to restart or stop auto-refresh if needed
+// Listen for updates to each tab to restart auto-refresh if needed
 chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
-  if (changeInfo.status === 'complete') {
-    if (shouldRefresh(tab.url) && isExtensionOn) {
-      startAutoRefresh(tabId);
-    } else {
-      stopAutoRefresh(); // Stop refreshing if URL doesn't match
-    }
+  if (changeInfo.status === 'complete' && shouldRefresh(tab.url) && isExtensionOn) {
+    startAutoRefresh(tabId);
   }
 });
