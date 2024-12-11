@@ -1,26 +1,24 @@
 var isExtensionOn = true;
-var refreshIntervalId = null;
 
-const refreshInterval = Math.floor(Math.random() * (115000 - 65000 + 1)) + 65000;
-
-// Function to check if URL matches the target page
+// Function to check URL
 function shouldRefresh(url) {
   return url === "https://app.prolific.com/studies";
 }
 
 // Function to set up auto-refresh
 function startAutoRefresh(tabId) {
-  if (refreshIntervalId) clearInterval(refreshIntervalId); // Clear any existing interval
 
-  refreshIntervalId = setInterval(() => {
-    chrome.scripting.executeScript({
-      target: { tabId: tabId },
-      func: () => location.reload()
-    });
-  }, refreshInterval);
+  const refreshInterval = Math.floor(Math.random() * (90000 - 67500 + 1)) + 67500;
+  const intervalInMinutes = refreshInterval / 60000;
+
+  // Clear existing alarm 
+  chrome.alarms.clear(`refresh-${tabId}`, () => {
+    // Create a new alarm
+    chrome.alarms.create(`refresh-${tabId}`, { delayInMinutes: intervalInMinutes });
+  });
 }
 
-// Restart auto-refresh on all relevant tabs when extension is toggled on
+// Restart auto-refresh when extension is toggled on
 function refreshAllTabs() {
   chrome.tabs.query({}, (tabs) => {
     for (const tab of tabs) {
@@ -31,19 +29,16 @@ function refreshAllTabs() {
   });
 }
 
-// Listen for messages to toggle the extension state
+// Toggle the extension state
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   if (request.cmd === "setOnOffState") {
     isExtensionOn = request.data.value;
 
-    // Clear refresh if turning off
-    if (!isExtensionOn && refreshIntervalId) {
-      clearInterval(refreshIntervalId);
-      refreshIntervalId = null;
-    }
-
-    // If turning on, re-enable auto-refresh on any relevant tabs
-    if (isExtensionOn) {
+    // Clear all alarms (OFF)
+    if (!isExtensionOn) {
+      chrome.alarms.clearAll();
+    } else {
+      // ON
       refreshAllTabs();
     }
 
@@ -55,9 +50,20 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   }
 });
 
-// Listen for updates to each tab to restart auto-refresh if needed
+// Reload
+chrome.alarms.onAlarm.addListener((alarm) => {
+  if (alarm.name.startsWith("refresh-")) {
+    const tabId = parseInt(alarm.name.split("-")[1]);
+    chrome.scripting.executeScript({
+      target: { tabId },
+      func: () => location.reload()
+    });
+    startAutoRefresh(tabId);
+  }
+});
+
 chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
-  if (changeInfo.status === 'complete' && shouldRefresh(tab.url) && isExtensionOn) {
+  if (changeInfo.status === "complete" && shouldRefresh(tab.url) && isExtensionOn) {
     startAutoRefresh(tabId);
   }
 });

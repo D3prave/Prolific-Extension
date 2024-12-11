@@ -1,27 +1,34 @@
-// Initialize the extension state when popup is opened
-document.addEventListener('DOMContentLoaded', function () {
-  const toggleButton = document.getElementById('toggleButton');
+// Toggle button
+const toggleButton = document.getElementById("toggleButton");
 
-  // Function to update button text based on the current state
-  function updateButtonText(isOn) {
-      toggleButton.textContent = isOn ? "Turn Off" : "Turn On";
-  }
+chrome.runtime.sendMessage({ cmd: "getOnOffState" }, (isExtensionOn) => {
+  updateButton(isExtensionOn);
+});
 
-  // Fetch the current state from the background script
-  chrome.runtime.sendMessage({ cmd: "getOnOffState" }, function (isOn) {
-      updateButtonText(isOn);
-  });
+// Click listener
+toggleButton.addEventListener("click", () => {
+  const isCurrentlyOn = toggleButton.classList.contains("on");
+  const newState = !isCurrentlyOn;
 
-  // Add click listener for the button
-  toggleButton.addEventListener('click', function () {
-      // Fetch the current state again to ensure consistency
-      chrome.runtime.sendMessage({ cmd: "getOnOffState" }, function (isOn) {
-          const newOnState = !isOn;
-
-          // Update the state in the background script
-          chrome.runtime.sendMessage({ cmd: "setOnOffState", data: { value: newOnState } }, function () {
-              updateButtonText(newOnState);
-          });
-      });
+  // Send to the background
+  chrome.runtime.sendMessage({ cmd: "setOnOffState", data: { value: newState } }, (response) => {
+    if (response.success) {
+      updateButton(newState);
+    } else {
+      console.error("Failed to update extension state.");
+    }
   });
 });
+
+// Function to update the button style
+function updateButton(isOn) {
+  if (isOn) {
+    toggleButton.textContent = "Turn Off";
+    toggleButton.classList.add("on");
+    toggleButton.classList.remove("off");
+  } else {
+    toggleButton.textContent = "Turn On";
+    toggleButton.classList.add("off");
+    toggleButton.classList.remove("on");
+  }
+}

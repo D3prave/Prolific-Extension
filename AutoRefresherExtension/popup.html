@@ -1,23 +1,31 @@
 <!DOCTYPE html>
 <html>
-  <head>
-    <title>Auto Refresh Control</title>
-    <style>
-      body {
-        min-width: 200px;
-        padding: 20px;
-        font-family: Arial, sans-serif;
-      }
-      #toggleButton {
-        padding: 10px;
-        width: 100%;
-        font-size: 16px;
-        cursor: pointer;
-      }
-    </style>
-  </head>
-  <body>
-    <button id="toggleButton">Turn Off</button>
-    <script src="popup.js"></script>
-  </body>
+<head>
+  <title>Auto Refresh Control</title>
+  <style>
+    body {
+      min-width: 200px;
+      padding: 20px;
+      font-family: Arial, sans-serif;
+      text-align: center;
+    }
+    #toggleButton {
+      padding: 10px;
+      width: 100%;
+      font-size: 16px;
+      cursor: pointer;
+      border: none;
+      border-radius: 5px;
+      background-color: #007bff;
+      color: white;
+    }
+    #toggleButton.off {
+      background-color: #dc3545;
+    }
+  </style>
+</head>
+<body>
+  <button id="toggleButton">Turn Off</button>
+  <script src="popup.js" defer></script>
+</body>
 </html>
