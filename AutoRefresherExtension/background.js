@@ -8,7 +8,7 @@ function shouldRefresh(url) {
 // Function to set up auto-refresh
 function startAutoRefresh(tabId) {
 
-  const refreshInterval = Math.floor(Math.random() * (90000 - 67500 + 1)) + 67500;
+  const refreshInterval = Math.floor(Math.random() * (150000 - 67500 + 1)) + 67500;
   const intervalInMinutes = refreshInterval / 60000;
 
   // Clear existing alarm 
